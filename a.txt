@@ -43,8 +43,9 @@ print()
 print(f'{C}=== Px Proxy AKTYWNE ==={R}')
 print()
 proc.wait()
-_="""
+BAT=r"""
 :python
 @chcp 65001 >nul
 @python -x "%~f0" %*
+@exit /b
 """
