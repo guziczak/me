@@ -72,9 +72,6 @@ for i in range(len(wish)+1):
 print(f' {Y}\u2605{R} {M}\u2605{R} {G}\u2605{R}')
 print()
 time.sleep(2.5)
-print(f'   {B}Dzi\u0119kuj\u0119 za korzystanie z Copilot CLI!{R}')
-print()
-time.sleep(1.5)
 for i in range(3,0,-1):
  dots='.' * (4-i)
  print(f'\r   {C}Minimalizuje za {i}{dots}{R}   ', end='', flush=True)
