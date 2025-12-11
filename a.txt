@@ -2,16 +2,38 @@
 import time,ctypes,subprocess,sys,os,random
 os.system('')
 ctypes.windll.kernel32.SetConsoleTitleW('Px Proxy - Copilot CLI - \u0141ukasz Guziczak')
-Y='\033[93m';C='\033[96m';M='\033[95m';G='\033[92m';W='\033[97m';R='\033[0m';B='\033[94m'
-ball=[["        .  *  .","      *  o  *  *","    *   o   *   *","   *  o    *    *","  *  o   *   *   *","  * o   *   *   *","  *o   *   *   * *","  *   *   *   *  *","   *   *   *   *","    *   *   *  *","      *  *  *","        .  *  ."],["        .  *  .","      *   o  *  *","    *    o  *   *","   *   o   *    *","  *   o  *   *   *","  *  o  *   *   *","  * o  *   *   * *","  *o  *   *   *  *","   o  *   *   *","    *   *   *  *","      *  *  *","        .  *  ."],["        .  *  .","      *    o *  *","    *     o *   *","   *    o  *    *","  *    o *   *   *","  *   o *   *   *","  *  o *   *   * *","  * o *   *   *  *","   o *   *   *","    o  *   *  *","      *  *  *","        .  *  ."],["        .  o  .","      *   o  *  *","    *    o   *   *","   *   o    *    *","  *   o   *   *   *","  *  o   *   *   *","  * o   *   *   * *","  *o   *   *   *  *","   *   *   *   *","    *   *   *  *","      *  *  *","        .  *  ."],["        . o*  .","      *  o   *  *","    *   o    *   *","   *  o     *    *","  *  o    *   *   *","  * o    *   *   *","  *o    *   *   * *","  *    *   *   *  *","   *   *   *   *","    *   *   *  *","      *  *  *","        .  *  ."],["        .o *  .","      * o    *  *","    *  o     *   *","   * o      *    *","  * o     *   *   *","  *o     *   *   *","  o     *   *   * *","  *    *   *   *  *","   *   *   *   *","    *   *   *  *","      *  *  *","        .  *  ."],["        o  *  .","      o      *  *","    *o       *   *","   o        *    *","  o       *   *   *","  *      *   *   *","  *     *   *   * *","  *    *   *   *  *","   *   *   *   *","    *   *   *  *","      *  *  *","        .  *  ."],["        .  *  .","      *      *  *","    *        *   *","   *        *    *","  *       *   *   *","  *      *   *   *","  *     *   *   * *","  *    *   *   *  *","   *   *   *   * o","    *   *   *  o","      *  *  * o","        .  *  o"]]
-fireworks=[["","        *   *       *","    *    \\|/   *","      * -*- *    *","   *    /|\\      ","        *   *   *",""],["","      *   *     *","   *   * * *   *","     *  * * *  *","   *   * * *   *","       *   *   *",""],["","   *      *      *","      * *   * *","   *    \\*/    *","      * *   * *","   *      *      *",""]]
-wishes=['\u0141ukaszu, mi\u0142ego dnia! \u2764','\u0141ukaszu, powodzenia z kodem! \u2728','\u0141ukaszu, niech Ci si\u0119 wiedzie! \u2605','\u0141ukaszu, dzi\u015b b\u0119dzie super! \u2606','\u0141ukaszu, kod sam si\u0119 napisze! \u269b','\u0141ukaszu, b\u0105d\u017a kreatywny! \u2734']
+Y='\033[93m';C='\033[96m';M='\033[95m';G='\033[92m';W='\033[97m';R='\033[0m';B='\033[94m';RED='\033[91m'
+ball=[
+["        .  *  .","      *  @  *  *","    *   o   *   *","   *  o    *    *","  *  o   *   *   *","  * o   *   *   *","  *o   *   *   * *","  *   *   *   *  *","   *   *   *   *","    *   *   *  *","      *  *  *","        .  *  ."],
+["        .  *  .","      *   @  *  *","    *    o  *   *","   *   o   *    *","  *  o   *   *   *","  * o   *   *   *","  *o   *   *   * *","  *   *   *   *  *","   *   *   *   *","    *   *   *  *","      *  *  *","        .  *  ."],
+["        .  *  .","      *    @ *  *","    *     o *   *","   *    o  *    *","  *   o  *   *   *","  *  o  *   *   *","  * o  *   *   * *","  *o  *   *   *  *","   *   *   *   *","    *   *   *  *","      *  *  *","        .  *  ."],
+["        .  *  .","      *     @*  *","    *     o  *   *","   *    o   *    *","  *    o *   *   *","  *   o *   *   *","  *  o *   *   * *","  * o *   *   *  *","   o   *   *   *","    *   *   *  *","      *  *  *","        .  *  ."],
+["        .  *  .","      *      * @*","    *     *  o   *","   *    *   o    *","  *    *  o  *   *","  *   *  o  *   *","  *  *  o   *   * *","  * *  o   *   *  *","   * o  *   *   *","    o   *   *  *","      *  *  *","        .  *  ."],
+["        .  *  .","      *      *  *","    *     *   *  @","   *    *   *   o*","  *    *   *  o  *","  *   *   *  o  *","  *  *   *  o  * *","  * *   *  o  *  *","   *   *  o   *","    *   * o  *  *","      *  o  *","        .  o  ."],
+["        .  *  .","      *      *  *","    *     *   *   *","   *    *   *    *","  *    *   *   * @*","  *   *   *   * o*","  *  *   *   * o *","  * *   *   * o  *","   *   *   * o *","    *   *  *o *  *","      *  * o*","        .  *o ."],
+["        .  *  .","      *      *  *","    *     *   *   *","   *    *   *    *","  *    *   *   *   *","  *   *   *   *   *","  *  *   *   *   *@*","  * *   *   *   *o *","   *   *   *   *o*","    *   *  *  *o*","      *  *  *o*","        .  * o."],
+["        .  *  .","      *      *  *","    *     *   *   *","   *    *   *    *","  *    *   *   *   *","  *   *   *   *   *","  *  *   *   *   * *","  * *   *   *   *  @","   *   *   *   * o","    *   *  *  * o","      *  *  * o","        .  *  o"],
+["        .  *  .","      *      *  *","    *     *   *   *","   *    *   *    *","  *    *   *   *   *","  *   *   *   *   *","  *  *   *   *   * *","  * *   *   *   *  *","   *   *   *   * @","    *   *  *  *o *","      *  *  *o *","        .  * o ."],
+["        .  *  .","      *      *  *","    *     *   *   *","   *    *   *    *","  *    *   *   *   *","  *   *   *   *   *","  *  *   *   *   * *","  * *   *   *   *  *","   *   *   *  @* *","    *   *  * o*  *","      *  * o*  *","        .  o  ."],
+["        .  *  .","      *      *  *","    *     *   *   *","   *    *   *    *","  *    *   *   *   *","  *   *   *   *   *","  *  *   *   *  @* *","  * *   *   *  o*  *","   *   *   * o*  *","    *   *  o*   *","      *  *o*  *","        . o*  ."],
+["        .  *  .","      *      *  *","    *     *   *   *","   *    *   *    *","  *    *   *  @*   *","  *   *   *  o*   *","  *  *   *  o*   * *","  * *   *  o*   *  *","   *   * o *   *","    *   *o *   *","      * o*  *","        o  *  ."],
+["        .  *  .","      *      *  *","    *     *  @*   *","   *    *   o*    *","  *    *  o *   *   *","  *   *  o *   *   *","  *  *  o *   *   * *","  * * o  *   *   *  *","   *  o *   *   *","    * o *   *  *","      o  *  *","       o.  *  ."],
+["        .  *  .","      *   @  *  *","    *    o  *   *","   *   o   *    *","  *   o  *   *   *","  *  o  *   *   *","  * o  *   *   * *","  *o  *   *   *  *","   o  *   *   *","    *   *   *  *","      *  *  *","        .  *  ."],
+["        . @*  .","      *  o   *  *","    *   o    *   *","   *  o    *    *","  *  o   *   *   *","  * o   *   *   *","  *o   *   *   * *","  *   *   *   *  *","   *   *   *   *","    *   *   *  *","      *  *  *","        .  *  ."]
+]
+fireworks=[
+["","      {Y}*{R}       {M}*{R}         {C}*{R}","   {G}*{R}      {W}\\{R} {Y}|{R} {W}/{R}      {Y}*{R}","        {C}*{R} {M}-{G}*{M}-{R} {Y}*{R}","   {M}*{R}      {W}/{R} {Y}|{R} {W}\\{R}      {G}*{R}","      {C}*{R}       {Y}*{R}         {M}*{R}",""],
+["","        {M}*{R}     {Y}*{R}     {G}*{R}","   {Y}*{R}    {W}* * *{R}    {C}*{R}","      {G}*{R}  {W}*{R} {M}*{R} {W}*{R}  {Y}*{R}","   {C}*{R}    {W}* * *{R}    {M}*{R}","        {Y}*{R}     {G}*{R}     {C}*{R}",""],
+["","     {G}*{R}   {Y}* *{R}   {M}*{R}","   {Y}*{R}   {W}*  *  *{R}   {C}*{R}","      {M}*{R} {W}*{R}{G}*{R}{W}*{R}{Y}*{R}{W}*{R} {G}*{R}","   {C}*{R}   {W}*  *  *{R}   {Y}*{R}","     {M}*{R}   {G}* *{R}   {Y}*{R}",""],
+["","   {C}*{R}  {Y}*{R}    {G}*{R}    {M}*{R}  {Y}*{R}","      {G}* * * * *{R}","   {M}*{R}  {W}* * {Y}@{W} * *{R}  {C}*{R}","      {Y}* * * * *{R}","   {Y}*{R}  {C}*{R}    {M}*{R}    {G}*{R}  {C}*{R}",""]
+]
+wishes=['\u0141ukaszu, mi\u0142ego dnia! \u2764','\u0141ukaszu, powodzenia z kodem! \u2728','\u0141ukaszu, niech Ci si\u0119 wiedzie! \u2605','\u0141ukaszu, dzi\u015b b\u0119dzie super! \u2606','\u0141ukaszu, kod sam si\u0119 napisze! \u269b','\u0141ukaszu, b\u0105d\u017a kreatywny! \u2734','\u0141ukaszu, jeste\u015b wspania\u0142y! \u2665','\u0141ukaszu, wszystko si\u0119 uda! \u263a']
 print('\033[2J\033[H')
 print(f'{Y}****************************************{R}')
-print(f'{Y}*                                      *{R}')
-print(f'{Y}*   Proxy dla Copilot CLI              *{R}')
-print(f'{Y}*   \u0141ukasz Guziczak                    *{R}')
-print(f'{Y}*                                      *{R}')
+print(f'{Y}*{R}                                      {Y}*{R}')
+print(f'{Y}*{R}   {W}Proxy dla Copilot CLI{R}              {Y}*{R}')
+print(f'{Y}*{R}   {C}\u0141ukasz Guziczak{R}                    {Y}*{R}')
+print(f'{Y}*{R}                                      {Y}*{R}')
 print(f'{Y}****************************************{R}')
 print()
 proc=subprocess.Popen([sys.executable,'-m','px'])
@@ -19,42 +41,45 @@ for _ in range(2):
  for frame in ball:
   print('\033[8;0H')
   for line in frame:
-   colored=line.replace('o',f'{M}o{Y}').replace('*',f'{Y}*{R}').replace('.',f'{Y}.{R}')
+   colored=line.replace('@',f'{RED}@{R}').replace('o',f'{M}o{R}').replace('*',f'{Y}*{R}').replace('.',f'{C}.{R}')
    print(f'  {colored}')
   print(f'\n      {C}Uruchamiam proxy...{R}')
-  time.sleep(0.12)
-for r in range(3):
+  time.sleep(0.08)
+for r in range(2):
  for frame in fireworks:
   print('\033[8;0H')
   for line in frame:
-   colored=line.replace('*',f'{Y}*{R}').replace('\\',f'{C}\\{R}').replace('/',f'{C}/{R}').replace('|',f'{M}|{R}').replace('-',f'{G}-{R}')
-   print(f'  {colored}')
+   ln=line.format(Y=Y,C=C,M=M,G=G,W=W,R=R,RED=RED,B=B)
+   print(f'  {ln}')
   print()
-  time.sleep(0.15)
+  time.sleep(0.2)
 print('\033[8;0H')
 print(f'''
-      {G}*{R}   {M}*{R}     {Y}*{R}   {G}*{R}   {C}*{R}
-   {Y}*{R}   {W}* * *{R}   {G}*{R}   {M}* *{R}
-     {M}*{R}  {W}*{R} {G}*{R} {W}*{R}  {C}*{R}   {Y}*{R}
-   {G}*{R}   {W}* * *{R}   {M}*{R}   {C}* *{R}
-      {C}*{R}   {Y}*{R}   {G}*{R}   {M}*{R}   {Y}*{R}
+   {Y}*{R}  {G}*{R}  {M}*{R}  {C}*{R}  {W}*{R}  {Y}*{R}  {G}*{R}  {M}*{R}
+      {C}*{R}  {Y}*{R}  {G}*{R}  {M}*{R}  {W}*{R}  {C}*{R}
+   {M}*{R}  {W}*{R}  {Y}*{R}  {G}*{R}  {C}*{R}  {M}*{R}  {W}*{R}  {Y}*{R}
+      {G}*{R}  {C}*{R}  {M}*{R}  {W}*{R}  {Y}*{R}  {G}*{R}
+   {W}*{R}  {Y}*{R}  {C}*{R}  {G}*{R}  {M}*{R}  {W}*{R}  {Y}*{R}  {C}*{R}
 ''')
 print()
-wish=random.choice(wishes)
-for i in range(len(wish)+1):
- print(f'\r   {G}\u2605 \u2605 \u2605{R} {W}{wish[:i]}{R}', end='', flush=True)
- time.sleep(0.03)
-print(f' {G}\u2605 \u2605 \u2605{R}')
-print()
-time.sleep(2)
-print(f'   {B}Dzi\u0119kuj\u0119 za korzystanie z Copilot CLI!{R}')
+print(f'      {G}~*~*~*~  {W}GOTOWE!{R}  {G}~*~*~*~{R}')
 print()
 time.sleep(1)
-print(f'   {C}Minimalizuje za 3 sekundy...{R}')
+wish=random.choice(wishes)
+for i in range(len(wish)+1):
+ print(f'\r   {G}\u2605{R} {M}\u2605{R} {Y}\u2605{R} {W}{wish[:i]}{R}', end='', flush=True)
+ time.sleep(0.04)
+print(f' {Y}\u2605{R} {M}\u2605{R} {G}\u2605{R}')
+print()
+time.sleep(2.5)
+print(f'   {B}Dzi\u0119kuj\u0119 za korzystanie z Copilot CLI!{R}')
+print()
+time.sleep(1.5)
 for i in range(3,0,-1):
- print(f'\r   {C}Minimalizuje za {i}...{R}   ', end='', flush=True)
+ dots='.' * (4-i)
+ print(f'\r   {C}Minimalizuje za {i}{dots}{R}   ', end='', flush=True)
  time.sleep(1)
-print(f'\r   {G}Zminimalizowano!{R}        ')
+print(f'\r   {G}\u2713 Zminimalizowano!{R}        ')
 time.sleep(0.5)
 ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(),6)
 print()
