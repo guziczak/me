@@ -1,226 +1,89 @@
 @goto :python
-import time,ctypes,subprocess,sys,os,random,math
+import time,ctypes,subprocess,sys,os,random
 os.system('')
 ctypes.windll.kernel32.SetConsoleTitleW('Px Proxy - Copilot CLI - \u0141ukasz Guziczak')
-
-# === KONFIGURACJA ===
-WIDTH = 40
-HEIGHT = 12
-BALL_RADIUS = 5
-BALL_CENTER_X = 10
-BALL_CENTER_Y = 6
-ANIMATION_SPEED = 0.07
-FRAMES_COUNT = 24
-HEADER_LINES = 7
-FPS_FIREWORKS = 0.18
-
-# === KOLORY ===
-class Col:
-    Y='\033[93m';C='\033[96m';M='\033[95m';G='\033[92m'
-    W='\033[97m';R='\033[0m';B='\033[94m';RED='\033[91m'
-
-# === NARZĘDZIA EKRANU ===
-class Screen:
-    @staticmethod
-    def clear():
-        print('\033[2J\033[H', end='')
-    
-    @staticmethod
-    def goto(row, col=0):
-        print(f'\033[{row};{col}H', end='')
-    
-    @staticmethod
-    def hide_cursor():
-        print('\033[?25l', end='')
-    
-    @staticmethod
-    def show_cursor():
-        print('\033[?25h', end='')
-
-# === GENERATOR KULI ===
-def generate_ball_frame(frame_num, total_frames):
-    """Generuje klatkę kuli z spiralą matematycznie"""
-    grid = [[' ' for _ in range(WIDTH)] for _ in range(HEIGHT)]
-    
-    # Rysuj kulę z gwiazdek
-    for y in range(HEIGHT):
-        for x in range(WIDTH):
-            dx = (x - BALL_CENTER_X) / 2  # /2 bo znaki są wyższe niż szersze
-            dy = y - BALL_CENTER_Y
-            dist = math.sqrt(dx*dx + dy*dy)
-            
-            # Krawędź kuli
-            if BALL_RADIUS - 0.8 < dist < BALL_RADIUS + 0.8:
-                grid[y][x] = '*'
-            # Wypełnienie kuli (rzadsze)
-            elif dist < BALL_RADIUS - 0.8 and (x + y) % 3 == 0:
-                grid[y][x] = '*'
-    
-    # Spirala - pozycja zależna od klatki
-    angle = (frame_num / total_frames) * 2 * math.pi
-    for i, offset in enumerate([0, 0.3, 0.6]):  # 3 punkty spirali
-        a = angle - offset
-        r = BALL_RADIUS * 0.7
-        sx = int(BALL_CENTER_X + math.cos(a) * r * 2)
-        sy = int(BALL_CENTER_Y + math.sin(a) * r)
-        if 0 <= sy < HEIGHT and 0 <= sx < WIDTH:
-            grid[sy][sx] = '@' if i == 0 else 'o'
-    
-    return grid
-
-def render_grid(grid, char_colors):
-    """Renderuje grid z kolorami, stała szerokość linii"""
-    lines = []
-    for row in grid:
-        line = ''
-        for ch in row:
-            if ch in char_colors:
-                line += char_colors[ch] + ch + Col.R
-            else:
-                line += ch
-        # WAŻNE: padding do stałej szerokości!
-        line = line.ljust(WIDTH + len(line) - len(''.join(row)))
-        lines.append(line)
-    return lines
-
-# === GENERATOR FAJERWERKÓW ===
-def generate_firework_frame(frame_num):
-    """Generuje klatkę fajerwerku matematycznie"""
-    grid = [[' ' for _ in range(WIDTH)] for _ in range(HEIGHT)]
-    cx, cy = WIDTH // 2, HEIGHT // 2
-    
-    # Promienie w różnych kierunkach
-    num_rays = 8
-    for i in range(num_rays):
-        angle = (i / num_rays) * 2 * math.pi + frame_num * 0.3
-        for r in range(1, 6):
-            x = int(cx + math.cos(angle) * r * 2)
-            y = int(cy + math.sin(angle) * r)
-            if 0 <= y < HEIGHT and 0 <= x < WIDTH:
-                if r < 3:
-                    grid[y][x] = '*'
-                else:
-                    grid[y][x] = '.' if frame_num % 2 == 0 else '*'
-    
-    # Centrum
-    grid[cy][cx] = '@'
-    
-    return grid
-
-# === RAMKA Z BUFOREM ===
-def draw_frame(lines, start_row, message=''):
-    """Rysuje kompletną ramkę z jednego print() - unika migotania"""
-    Screen.goto(start_row)
-    output = ''
-    for line in lines:
-        # Każda linia ma stałą szerokość - nadpisuje poprzednią zawartość
-        padded = (line + ' ' * WIDTH)[:WIDTH * 3]  # x3 bo kolory zajmują znaki
-        output += padded + '\n'
-    if message:
-        output += '\n' + message.center(WIDTH) + '\n'
-    print(output, end='', flush=True)
-
-# === EFEKT PISANIA ===
-def typewriter(text, prefix='', suffix='', delay=0.04):
-    """Efekt pisania litera po literze"""
-    for i in range(len(text) + 1):
-        print(f'\r{prefix}{text[:i]}{" " * (len(text)-i)}{suffix}', end='', flush=True)
-        time.sleep(delay)
-    print()
-
-# === BANNER ===
-def draw_banner():
-    """Rysuje stały banner - zawsze ta sama pozycja"""
-    banner = f'''
-{Col.Y}+{'='*38}+{Col.R}
-{Col.Y}|{Col.R}                                      {Col.Y}|{Col.R}
-{Col.Y}|{Col.R}   {Col.W}Proxy dla Copilot CLI{Col.R}              {Col.Y}|{Col.R}
-{Col.Y}|{Col.R}   {Col.C}\u0141ukasz Guziczak{Col.R}                    {Col.Y}|{Col.R}
-{Col.Y}|{Col.R}                                      {Col.Y}|{Col.R}
-{Col.Y}+{'='*38}+{Col.R}
-'''
-    print(banner)
-
-# === ODLICZANIE ===
-def countdown(seconds):
-    """Odliczanie z animacją"""
-    for i in range(seconds, 0, -1):
-        bar = f"[{'#' * i}{'.' * (seconds-i)}]"
-        print(f'\r   {Col.C}{bar} Minimalizacja za {i}s...{Col.R}   ', end='', flush=True)
-        time.sleep(1)
-    print(f'\r   {Col.G}\u2713 Zminimalizowano!{Col.R}' + ' ' * 20)
-
-# === GŁÓWNA SEKWENCJA ===
-def main():
-    wishes = [
-        '\u0141ukaszu, mi\u0142ego dnia! \u2764',
-        '\u0141ukaszu, powodzenia z kodem! \u2728',
-        '\u0141ukaszu, niech Ci si\u0119 wiedzie! \u2605',
-        '\u0141ukaszu, dzi\u015b b\u0119dzie super! \u2606',
-        '\u0141ukaszu, jeste\u015b wspania\u0142y! \u2665',
-        '\u0141ukaszu, wszystko si\u0119 uda! \u263a'
-    ]
-    
-    char_colors_ball = {'@': Col.RED, 'o': Col.M, '*': Col.Y, '.': Col.C}
-    char_colors_fire = {'@': Col.W, '*': Col.Y, '.': Col.C}
-    
-    Screen.clear()
-    Screen.hide_cursor()
-    draw_banner()
-    
-    # Start proxy
-    proc = subprocess.Popen([sys.executable, '-m', 'px'])
-    
-    # Animacja kuli - 2 pełne obroty
-    for _ in range(2):
-        for frame_num in range(FRAMES_COUNT):
-            grid = generate_ball_frame(frame_num, FRAMES_COUNT)
-            lines = render_grid(grid, char_colors_ball)
-            draw_frame(lines, HEADER_LINES + 1, f'{Col.C}Uruchamiam proxy...{Col.R}')
-            time.sleep(ANIMATION_SPEED)
-    
-    # Fajerwerki - 3 rundy
-    for _ in range(3):
-        for frame_num in range(6):
-            grid = generate_firework_frame(frame_num)
-            lines = render_grid(grid, char_colors_fire)
-            draw_frame(lines, HEADER_LINES + 1)
-            time.sleep(FPS_FIREWORKS)
-    
-    # Finał
-    Screen.goto(HEADER_LINES + 1)
-    print(f'''
-   {Col.Y}*{Col.R}  {Col.G}*{Col.R}  {Col.M}*{Col.R}  {Col.C}*{Col.R}  {Col.W}*{Col.R}  {Col.Y}*{Col.R}  {Col.G}*{Col.R}  {Col.M}*{Col.R}
-      {Col.C}*{Col.R}  {Col.Y}*{Col.R}  {Col.G}*{Col.R}  {Col.M}*{Col.R}  {Col.W}*{Col.R}  {Col.C}*{Col.R}
-   {Col.M}*{Col.R}  {Col.W}*{Col.R}  {Col.Y}*{Col.R}  {Col.G}*{Col.R}  {Col.C}*{Col.R}  {Col.M}*{Col.R}  {Col.W}*{Col.R}  {Col.Y}*{Col.R}
-
-      {Col.G}~*~*~*~  {Col.W}GOTOWE!{Col.R}  {Col.G}~*~*~*~{Col.R}
+Y='\033[93m';C='\033[96m';M='\033[95m';G='\033[92m';W='\033[97m';R='\033[0m';B='\033[94m';RED='\033[91m'
+ball=[
+["        .  *  .","      *  @  *  *","    *   o   *   *","   *  o    *    *","  *  o   *   *   *","  * o   *   *   *","  *o   *   *   * *","  *   *   *   *  *","   *   *   *   *","    *   *   *  *","      *  *  *","        .  *  ."],
+["        .  *  .","      *   @  *  *","    *    o  *   *","   *   o   *    *","  *  o   *   *   *","  * o   *   *   *","  *o   *   *   * *","  *   *   *   *  *","   *   *   *   *","    *   *   *  *","      *  *  *","        .  *  ."],
+["        .  *  .","      *    @ *  *","    *     o *   *","   *    o  *    *","  *   o  *   *   *","  *  o  *   *   *","  * o  *   *   * *","  *o  *   *   *  *","   *   *   *   *","    *   *   *  *","      *  *  *","        .  *  ."],
+["        .  *  .","      *     @*  *","    *     o  *   *","   *    o   *    *","  *    o *   *   *","  *   o *   *   *","  *  o *   *   * *","  * o *   *   *  *","   o   *   *   *","    *   *   *  *","      *  *  *","        .  *  ."],
+["        .  *  .","      *      * @*","    *     *  o   *","   *    *   o    *","  *    *  o  *   *","  *   *  o  *   *","  *  *  o   *   * *","  * *  o   *   *  *","   * o  *   *   *","    o   *   *  *","      *  *  *","        .  *  ."],
+["        .  *  .","      *      *  *","    *     *   *  @","   *    *   *   o*","  *    *   *  o  *","  *   *   *  o  *","  *  *   *  o  * *","  * *   *  o  *  *","   *   *  o   *","    *   * o  *  *","      *  o  *","        .  o  ."],
+["        .  *  .","      *      *  *","    *     *   *   *","   *    *   *    *","  *    *   *   * @*","  *   *   *   * o*","  *  *   *   * o *","  * *   *   * o  *","   *   *   * o *","    *   *  *o *  *","      *  * o*","        .  *o ."],
+["        .  *  .","      *      *  *","    *     *   *   *","   *    *   *    *","  *    *   *   *   *","  *   *   *   *   *","  *  *   *   *   *@*","  * *   *   *   *o *","   *   *   *   *o*","    *   *  *  *o*","      *  *  *o*","        .  * o."],
+["        .  *  .","      *      *  *","    *     *   *   *","   *    *   *    *","  *    *   *   *   *","  *   *   *   *   *","  *  *   *   *   * *","  * *   *   *   *  @","   *   *   *   * o","    *   *  *  * o","      *  *  * o","        .  *  o"],
+["        .  *  .","      *      *  *","    *     *   *   *","   *    *   *    *","  *    *   *   *   *","  *   *   *   *   *","  *  *   *   *   * *","  * *   *   *   *  *","   *   *   *   * @","    *   *  *  *o *","      *  *  *o *","        .  * o ."],
+["        .  *  .","      *      *  *","    *     *   *   *","   *    *   *    *","  *    *   *   *   *","  *   *   *   *   *","  *  *   *   *   * *","  * *   *   *   *  *","   *   *   *  @* *","    *   *  * o*  *","      *  * o*  *","        .  o  ."],
+["        .  *  .","      *      *  *","    *     *   *   *","   *    *   *    *","  *    *   *   *   *","  *   *   *   *   *","  *  *   *   *  @* *","  * *   *   *  o*  *","   *   *   * o*  *","    *   *  o*   *","      *  *o*  *","        . o*  ."],
+["        .  *  .","      *      *  *","    *     *   *   *","   *    *   *    *","  *    *   *  @*   *","  *   *   *  o*   *","  *  *   *  o*   * *","  * *   *  o*   *  *","   *   * o *   *","    *   *o *   *","      * o*  *","        o  *  ."],
+["        .  *  .","      *      *  *","    *     *  @*   *","   *    *   o*    *","  *    *  o *   *   *","  *   *  o *   *   *","  *  *  o *   *   * *","  * * o  *   *   *  *","   *  o *   *   *","    * o *   *  *","      o  *  *","       o.  *  ."],
+["        .  *  .","      *   @  *  *","    *    o  *   *","   *   o   *    *","  *   o  *   *   *","  *  o  *   *   *","  * o  *   *   * *","  *o  *   *   *  *","   o  *   *   *","    *   *   *  *","      *  *  *","        .  *  ."],
+["        . @*  .","      *  o   *  *","    *   o    *   *","   *  o    *    *","  *  o   *   *   *","  * o   *   *   *","  *o   *   *   * *","  *   *   *   *  *","   *   *   *   *","    *   *   *  *","      *  *  *","        .  *  ."]
+]
+fireworks=[
+["","      {Y}*{R}       {M}*{R}         {C}*{R}","   {G}*{R}      {W}\\{R} {Y}|{R} {W}/{R}      {Y}*{R}","        {C}*{R} {M}-{G}*{M}-{R} {Y}*{R}","   {M}*{R}      {W}/{R} {Y}|{R} {W}\\{R}      {G}*{R}","      {C}*{R}       {Y}*{R}         {M}*{R}",""],
+["","        {M}*{R}     {Y}*{R}     {G}*{R}","   {Y}*{R}    {W}* * *{R}    {C}*{R}","      {G}*{R}  {W}*{R} {M}*{R} {W}*{R}  {Y}*{R}","   {C}*{R}    {W}* * *{R}    {M}*{R}","        {Y}*{R}     {G}*{R}     {C}*{R}",""],
+["","     {G}*{R}   {Y}* *{R}   {M}*{R}","   {Y}*{R}   {W}*  *  *{R}   {C}*{R}","      {M}*{R} {W}*{R}{G}*{R}{W}*{R}{Y}*{R}{W}*{R} {G}*{R}","   {C}*{R}   {W}*  *  *{R}   {Y}*{R}","     {M}*{R}   {G}* *{R}   {Y}*{R}",""],
+["","   {C}*{R}  {Y}*{R}    {G}*{R}    {M}*{R}  {Y}*{R}","      {G}* * * * *{R}","   {M}*{R}  {W}* * {Y}@{W} * *{R}  {C}*{R}","      {Y}* * * * *{R}","   {Y}*{R}  {C}*{R}    {M}*{R}    {G}*{R}  {C}*{R}",""]
+]
+wishes=['\u0141ukaszu, mi\u0142ego dnia! \u2764','\u0141ukaszu, powodzenia z kodem! \u2728','\u0141ukaszu, niech Ci si\u0119 wiedzie! \u2605','\u0141ukaszu, dzi\u015b b\u0119dzie super! \u2606','\u0141ukaszu, kod sam si\u0119 napisze! \u269b','\u0141ukaszu, b\u0105d\u017a kreatywny! \u2734','\u0141ukaszu, jeste\u015b wspania\u0142y! \u2665','\u0141ukaszu, wszystko si\u0119 uda! \u263a']
+print('\033[2J\033[H')
+print(f'{Y}****************************************{R}')
+print(f'{Y}*{R}                                      {Y}*{R}')
+print(f'{Y}*{R}   {W}Proxy dla Copilot CLI{R}              {Y}*{R}')
+print(f'{Y}*{R}   {C}\u0141ukasz Guziczak{R}                    {Y}*{R}')
+print(f'{Y}*{R}                                      {Y}*{R}')
+print(f'{Y}****************************************{R}')
+print()
+proc=subprocess.Popen([sys.executable,'-m','px'])
+for _ in range(2):
+ for frame in ball:
+  print('\033[8;0H')
+  for line in frame:
+   colored=line.replace('@',f'{RED}@{R}').replace('o',f'{M}o{R}').replace('*',f'{Y}*{R}').replace('.',f'{C}.{R}')
+   print(f'  {colored}')
+  print(f'\n      {C}Uruchamiam proxy...{R}')
+  time.sleep(0.08)
+for r in range(2):
+ for frame in fireworks:
+  print('\033[8;0H')
+  for line in frame:
+   ln=line.format(Y=Y,C=C,M=M,G=G,W=W,R=R,RED=RED,B=B)
+   print(f'  {ln}')
+  print()
+  time.sleep(0.2)
+print('\033[8;0H')
+print(f'''
+   {Y}*{R}  {G}*{R}  {M}*{R}  {C}*{R}  {W}*{R}  {Y}*{R}  {G}*{R}  {M}*{R}
+      {C}*{R}  {Y}*{R}  {G}*{R}  {M}*{R}  {W}*{R}  {C}*{R}
+   {M}*{R}  {W}*{R}  {Y}*{R}  {G}*{R}  {C}*{R}  {M}*{R}  {W}*{R}  {Y}*{R}
+      {G}*{R}  {C}*{R}  {M}*{R}  {W}*{R}  {Y}*{R}  {G}*{R}
+   {W}*{R}  {Y}*{R}  {C}*{R}  {G}*{R}  {M}*{R}  {W}*{R}  {Y}*{R}  {C}*{R}
 ''')
-    
-    # Życzenie z efektem pisania
-    time.sleep(0.5)
-    wish = random.choice(wishes)
-    typewriter(wish, 
-               prefix=f'   {Col.G}\u2605{Col.R} {Col.M}\u2605{Col.R} {Col.Y}\u2605{Col.R} {Col.W}',
-               suffix=f'{Col.R} {Col.Y}\u2605{Col.R} {Col.M}\u2605{Col.R} {Col.G}\u2605{Col.R}')
-    
-    print()
-    time.sleep(2.5)
-    
-    # Odliczanie i minimalizacja
-    countdown(3)
-    time.sleep(0.3)
-    
-    Screen.show_cursor()
-    ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 6)
-    
-    print(f'\n{Col.C}=== Px Proxy AKTYWNE ==={Col.R}\n')
-    proc.wait()
-
-if __name__ == '__main__':
-    main()
-
-BAT = r"""
+print()
+print(f'      {G}~*~*~*~  {W}GOTOWE!{R}  {G}~*~*~*~{R}')
+print()
+time.sleep(1)
+wish=random.choice(wishes)
+for i in range(len(wish)+1):
+ print(f'\r   {G}\u2605{R} {M}\u2605{R} {Y}\u2605{R} {W}{wish[:i]}{R}', end='', flush=True)
+ time.sleep(0.04)
+print(f' {Y}\u2605{R} {M}\u2605{R} {G}\u2605{R}')
+print()
+time.sleep(2.5)
+for i in range(3,0,-1):
+ dots='.' * (4-i)
+ print(f'\r   {C}Minimalizuje za {i}{dots}{R}   ', end='', flush=True)
+ time.sleep(1)
+print(f'\r   {G}\u2713 Zminimalizowano!{R}        ')
+time.sleep(0.5)
+ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(),6)
+print()
+print(f'{C}=== Px Proxy AKTYWNE ==={R}')
+print()
+proc.wait()
+BAT=r"""
 :python
 @chcp 65001 >nul
 @python -x "%~f0" %*
